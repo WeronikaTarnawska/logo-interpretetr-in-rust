@@ -10,7 +10,9 @@ pub fn eval(cmd: Command, image: &mut Image) {
         Command::Right(expr) => image.right(eval_expr(expr)),
         Command::Left(expr) => image.left(eval_expr(expr)),
         Command::Show(expr) => println!("{}", eval_expr(expr)),
-        Command::Repeat(iters, body ) => eval_loop(eval_expr(iters), body, image)
+        Command::Repeat(iters, body ) => eval_loop(eval_expr(iters), body, image),
+        Command::FunctionCall(name, args) => unimplemented!(),
+        Command::FunctionDeclaration(name,args ,cmds ) => unimplemented!(),
     }
 }
 
@@ -28,6 +30,7 @@ fn eval_expr(expr: Expr) -> f32 {
         Expr::Number(n) => n,
         Expr::Add(e1, e2) => eval_expr(*e1) + eval_expr(*e2),
         Expr::Mul(e1, e2) => eval_expr(*e1) * eval_expr(*e2),
+        Expr::Variable(name) => unimplemented!()
     }
 }
 

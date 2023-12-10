@@ -1,9 +1,10 @@
-use crate::lexer::Token;
 use crate::expr_parser;
+use crate::lexer::Token;
 use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
+    Variable(String),
     Number(f32),
     Mul(Box<Expr>, Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -16,10 +17,13 @@ pub enum Command {
     Right(Expr),
     Left(Expr),
     Show(Expr),
-    Repeat(Expr, VecDeque<Command>)
+    Repeat(Expr, VecDeque<Command>),
+    FunctionDeclaration(String, Vec<String>, VecDeque<Command>),
+    FunctionCall(String, Vec<Expr>),
+    // List(Vec<Expr>),
 }
 
-pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
+pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     let mut commands = VecDeque::new();
 
     while let Some(token) = tokens.pop_front() {
@@ -30,6 +34,17 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
                 commands.push_back(Command::Repeat(iters, body))
             }
 
+            Token::To => {
+                let name = parse_name(tokens);
+                let args = parse_args(tokens);
+                let body = parse_block(tokens);
+                commands.push_back(Command::FunctionDeclaration(name, args, body));
+            }
+
+            Token::Function(name) => {
+                let args = parse_expr_seq(tokens);
+                commands.push_back(Command::FunctionCall(name, args))
+            }
 
             Token::Forward | Token::Backward | Token::Right | Token::Left | Token::Show => {
                 let expr = parse_expr(tokens);
@@ -42,7 +57,9 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
                     _ => unreachable!(),
                 });
             }
-            Token::RBracket=> {return commands;}
+            Token::RBracket | Token::End => {
+                return commands;
+            }
             _ => {
                 // TODO
             }
@@ -51,7 +68,55 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
     commands
 }
 
-fn parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command>{
+fn parse_expr_seq(tokens: &mut VecDeque<Token>) -> Vec<Expr> {
+    let mut args: Vec<Expr> = vec![];
+    loop {
+        match tokens.front() {
+            Some(Token::Number(Some(_))) | Some(Token::Variable(_)) | Some(Token::LParen) => {
+                let expr = parse_expr(tokens);
+                args.push(expr);
+            }
+            Some(Token::Backward)
+            | Some(Token::Forward)
+            | Some(Token::Function(_))
+            | Some(Token::Left)
+            | Some(Token::Repeat)
+            | Some(Token::Right)
+            | Some(Token::Show)
+            | Some(Token::To) => {
+                break;
+            }
+            _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
+        }
+    }
+    args
+}
+
+fn parse_args(tokens: &mut VecDeque<Token>) -> Vec<String> {
+    let mut args: Vec<String> = vec![];
+    loop {
+        let tok = tokens.pop_front();
+        match tok {
+            Some(Token::Variable(name)) => {
+                args.push(name);
+            }
+            Some(tok) => {
+                tokens.push_front(tok);
+                break;
+            }
+            _ => {break;}
+        }
+    }
+    args
+}
+fn parse_name(tokens: &mut VecDeque<Token>) -> String {
+    match tokens.pop_front() {
+        Some(Token::Function(name)) => name,
+        _ => panic!("Expected function name after TO"),
+    }
+}
+
+fn parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     match tokens.pop_front() {
         Some(Token::LBracket) => parse(tokens),
         _ => panic!("Parse block: block should start with a '['"),

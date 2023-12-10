@@ -3,16 +3,6 @@ use std::collections::VecDeque;
 
 #[derive(Debug, Logos, PartialEq)]
 pub enum Token {
-    #[regex(r"fd|forward")]
-    Forward,
-    #[regex(r"bk|back|backward")]
-    Backward,
-    #[regex(r"lt|left")]
-    Left,
-    #[regex(r"rt|right")]
-    Right,
-    #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
-    Number(Option<f32>),
     #[token("*")]
     Mul,
     #[token("+")]
@@ -29,6 +19,24 @@ pub enum Token {
     Repeat,
     #[token("show")]
     Show,
+    #[regex(r"fd|forward")]
+    Forward,
+    #[regex(r"bk|back|backward")]
+    Backward,
+    #[regex(r"lt|left")]
+    Left,
+    #[regex(r"rt|right")]
+    Right,
+    #[regex(r"to|TO")]
+    To,
+    #[regex(r"end|END")]
+    End,
+    #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
+    Number(Option<f32>),
+    #[regex(r":[a-z]+", |lex| lex.slice().to_string())]
+    Variable(String),
+    #[regex(r"[a-z]+", |lex| lex.slice().to_string())]
+    Function(String),
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,
 }
