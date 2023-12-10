@@ -2,20 +2,21 @@ use crate::lexer::Token;
 use crate::expr_parser;
 use std::collections::VecDeque;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Number(f32),
     Mul(Box<Expr>, Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Command {
     Forward(Expr),
     Backward(Expr),
     Right(Expr),
     Left(Expr),
     Show(Expr),
+    Repeat(Expr, VecDeque<Command>)
 }
 
 pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
@@ -23,6 +24,13 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
 
     while let Some(token) = tokens.pop_front() {
         match token {
+            Token::Repeat => {
+                let iters = parse_expr(tokens);
+                let body = parse_block(tokens);
+                commands.push_back(Command::Repeat(iters, body))
+            }
+
+
             Token::Forward | Token::Backward | Token::Right | Token::Left | Token::Show => {
                 let expr = parse_expr(tokens);
                 commands.push_back(match token {
@@ -34,12 +42,20 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
                     _ => unreachable!(),
                 });
             }
+            Token::RBracket=> {return commands;}
             _ => {
                 // TODO
             }
         }
     }
     commands
+}
+
+fn parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command>{
+    match tokens.pop_front() {
+        Some(Token::LBracket) => parse(tokens),
+        _ => panic!("Parse block: block should start with a '['"),
+    }
 }
 
 fn parse_expr(tokens: &mut VecDeque<Token>) -> Expr {

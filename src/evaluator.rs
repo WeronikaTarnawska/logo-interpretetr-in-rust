@@ -1,4 +1,5 @@
 use crate::parser::{Command, Expr};
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Write;
 
@@ -9,7 +10,16 @@ pub fn eval(cmd: Command, image: &mut Image) {
         Command::Right(expr) => image.right(eval_expr(expr)),
         Command::Left(expr) => image.left(eval_expr(expr)),
         Command::Show(expr) => println!("{}", eval_expr(expr)),
-        // _ => unimplemented!(),
+        Command::Repeat(iters, body ) => eval_loop(eval_expr(iters), body, image)
+    }
+}
+
+fn eval_loop(iters:f32, commands: VecDeque<Command>, image: &mut Image){
+    let n = iters as i32;
+    for _i in 0..n{
+        for cmd in &commands{
+            eval(cmd.clone(), image);
+        }
     }
 }
 
@@ -18,7 +28,6 @@ fn eval_expr(expr: Expr) -> f32 {
         Expr::Number(n) => n,
         Expr::Add(e1, e2) => eval_expr(*e1) + eval_expr(*e2),
         Expr::Mul(e1, e2) => eval_expr(*e1) * eval_expr(*e2),
-        // _ => unimplemented!(),
     }
 }
 

@@ -21,11 +21,32 @@ pub enum Token {
     LParen,
     #[token(")")]
     RParen,
+    #[token("[")]
+    LBracket,
+    #[token("]")]
+    RBracket,
+    #[token("repeat")]
+    Repeat,
     #[token("show")]
     Show,
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,
 }
+/* TODO
+- function declaration
+to name :arg1 :arg2
+  body
+end
+
+- function call
+builtin functions:
+* clearscreen
+* cleartext
+
+- lists
+[1 2 3]
+
+*/
 
 pub fn process(input: &str) -> VecDeque<Token> {
     let processed = Token::lexer(input)
@@ -48,42 +69,3 @@ pub fn _process_line(source: &str) {
         _ => eprintln!("Unknown command / Unimplemented"),
     });
 }
-
-/*
-this logo code:
-
-forward 3 right 30+60
-backward 4.5
-left 40+4*5
-show 6+2*8+5*9
-
-
-should parse to the following:
-
-Forward(Number(3.0))
-Right(Add(Number(30.0, Number(60.0))))
-Backward(Number(4.5))
-Left(Add(Number(40.0), Mul(Number(4.0),Number(5.0))))
-Show(Add(Add(Number(6.0),Mul(Number(2.0), Number(8.0))), Mul(Number(5.0), Number(9.0))))))
-*/
-
-/*
-- function declaration
-to name :arg1 :arg2
-  body
-end
-
-- loop
-repeat n [body]
-
-- function call
-builtin functions:
-* clearscreen
-* cleartext
-
-- lists
-[1 2 3]
-
-
-
-*/
