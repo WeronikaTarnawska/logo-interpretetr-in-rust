@@ -29,12 +29,12 @@ fn parse_multiplication(tokens: &mut VecDeque<Token>) -> Box<Expr> {
 fn parse_operand(tokens: &mut VecDeque<Token>) -> Box<Expr> {
   match tokens.pop_front() {
       Some(Token::Number(Some(num))) => Box::new(Expr::Number(num)),
-      // Some(Token::LParen) => {
-      //     let result = parse_addition(tokens);
-      //     assert!(tokens.pop_front()== Some(Token::RParen), "Missing ')'"); // Consume the ')'
-      //     result
-      // }
-      // Some(Token::RParen) => panic!("Unexpected ')' without '('"),
+      Some(Token::LParen) => {
+          let result = parse_addition(tokens);
+          assert!(tokens.pop_front()== Some(Token::RParen), "Missing ')'"); // Consume the ')'
+          result
+      }
+      Some(Token::RParen) => panic!("Unexpected ')' without '('"),
       _ => panic!("Invalid expression"),
   }
 }

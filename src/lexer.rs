@@ -17,6 +17,10 @@ pub enum Token {
     Mul,
     #[token("+")]
     Add,
+    #[token("(")]
+    LParen,
+    #[token(")")]
+    RParen,
     #[token("show")]
     Show,
     #[regex(r"[ \t\n\f]+", logos::skip)]
