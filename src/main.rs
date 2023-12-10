@@ -1,94 +1,87 @@
+mod evaluator;
+mod expr_parser;
 mod lexer;
-use std::io::{self, Write, BufRead, BufReader};
+mod parser;
+use std::collections::VecDeque;
+
 use clap::{App, Arg};
 use std::fs::File;
+use std::io::{self, BufReader, Read, Write};
 
 fn get_matches() -> clap::ArgMatches<'static> {
     App::new("Logo Interpreter")
-    .arg(
-        Arg::with_name("input")
-            .short("i")
-            .long("input")
-            .value_name("FILE")
-            .help("Set input file, default = stdin")
-            .takes_value(true),
-    )
-    .arg(
-        Arg::with_name("output")
-            .short("o")
-            .long("output")
-            .value_name("FILE")
-            .help("Redirect stdout")
-            .takes_value(true),
-    )
-    .arg(
-        Arg::with_name("graphics")
-            .short("g")
-            .long("graphics")
-            .value_name("FILE")
-            .help("Save image to file, default = result.svg")
-            .takes_value(true),
-    )
-    .get_matches()
+        .arg(
+            Arg::with_name("input")
+                .short("i")
+                .long("input")
+                .value_name("FILE")
+                .help("Set input file, default = stdin")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .value_name("FILE")
+                .help("Redirect stdout")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("graphics")
+                .short("g")
+                .long("graphics")
+                .value_name("FILE")
+                .help("Save image to file, default = result.svg")
+                .takes_value(true),
+        )
+        .get_matches()
 }
 fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
-
+    let mut image = evaluator::Image::new(700.0, 500.0);
     if let Some(input_file) = matches.value_of("input") {
-        // Redirect input from the specified file
+        /* Parse a script - Redirect input from file */
         let file = File::open(input_file).expect("Failed to open input file");
-        let reader = BufReader::new(file);
-
-        for line in reader.lines() {
-            lexer::process_line(&line.expect("Error reading line from input file"));
+        let mut reader = BufReader::new(file);
+        let mut prog = "".to_string();
+        if reader.read_to_string(&mut prog).is_err() {
+            panic!("Can not read input file")
+        }
+        let mut tokens: VecDeque<lexer::Token> = lexer::process(prog.as_str());
+        let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
+        for cmd in ast {
+            println!("Parsed to:\n{:?}", cmd);
+            evaluator::eval(cmd, &mut image);
         }
     } else {
-    /* Start interactive session */
-    println!("Enter Logo command (or 'exit' to quit)");
-    loop {
-        print!(">>");
-        io::stdout().flush().unwrap();
+        /* Start interactive session */
+        println!("Enter Logo command (or 'exit' to quit)");
+        loop {
+            print!(">>");
+            io::stdout().flush().unwrap();
 
-        let mut input = String::new();
-        if io::stdin().read_line(&mut input).unwrap()==0{
-            println!("exit");
-            break;
+            let mut input = String::new();
+            if io::stdin().read_line(&mut input).unwrap() == 0 {
+                println!("exit");
+                break;
+            }
+
+            let input = input.trim();
+
+            if input.eq_ignore_ascii_case("exit") {
+                break;
+            }
+            let mut tokens: VecDeque<lexer::Token> = lexer::process(input);
+            let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
+            for cmd in ast {
+                println!("Parsed to:\n{:?}", cmd);
+                evaluator::eval(cmd, &mut image);
+            }
         }
-
-        let input = input.trim();
-
-        if input.eq_ignore_ascii_case("exit") {
-            break;
-        }
-
-        lexer::process_line(input);
+    }
+    if let Some(output_file) = matches.value_of("graphisc") {
+        image.save_svg(&format!("{}.svg", output_file)[..]);
+    } else {
+        image.save_svg("output.svg");
     }
 }
-}
-/* tutorials */
-/* https://rust-hosted-langs.github.io/book/introduction.html */
-/* https://stopa.io/post/222 */
-/* https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html */
-/* https://blog.cloudflare.com/building-fast-interpreters-in-rust/ */
-/* https://p3ld3v.medium.com/writing-interpreter-in-rust-using-grmtools-7a6a0458b99f */
-
-/* book */
-/* https://craftinginterpreters.com/contents.html */
-
-/* crates and tools */
-/* https://github.com/rust-bakery/nom */
-/* https://lib.rs/crates/rowan */
-/* https://docs.rs/logos/0.12.0/logos/index.html#logos */
-
-/* logo interpreters */
-/* https://github.com/ivansandrk/Rust-Logo4.0-Interpreter */
-/* https://github.com/wojteklu/logo */
-/* https://github.com/inexorabletash/jslogo */
-
-
-/*
-    * lexer - logo code to tokens
-    * parser - list of tokens to abstract syntax tree
-    * evaluator - the interpreter
-    * graphics - result to svg
-*/

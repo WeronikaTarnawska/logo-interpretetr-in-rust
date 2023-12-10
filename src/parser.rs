@@ -42,7 +42,7 @@ pub fn parse(tokens:&mut VecDeque<Token>) -> VecDeque<Command> {
     commands
 }
 
-fn parse_expr<'a>(tokens: &mut VecDeque<Token>) -> Expr {
+fn parse_expr(tokens: &mut VecDeque<Token>) -> Expr {
     *expr_parser::parse_addition(tokens)
 }
 
