@@ -24,7 +24,7 @@
 
 
 # Lista Zakupów:
-- [ ] cebula
+- [x] cebula
 - [ ] kmin rzymmski
 - [ ] kolendra
 - [ ] wołowina mielona
