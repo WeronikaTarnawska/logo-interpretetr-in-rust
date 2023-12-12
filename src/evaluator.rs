@@ -1,52 +1,120 @@
 use crate::parser::{Command, Expr};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::Write;
 
-pub fn eval(cmd: Command, image: &mut Image) {
-    match cmd {
-        Command::Forward(expr) => image.forward(eval_expr(expr)),
-        Command::Backward(expr) => image.backward(eval_expr(expr)),
-        Command::Right(expr) => image.right(eval_expr(expr)),
-        Command::Left(expr) => image.left(eval_expr(expr)),
-        Command::Show(expr) => println!("{}", eval_expr(expr)),
-        Command::Repeat(iters, body ) => eval_loop(eval_expr(iters), body, image),
-        Command::FunctionCall(name, args) => unimplemented!(),
-        Command::FunctionDeclaration(name,args ,cmds ) => unimplemented!(),
-    }
+#[derive(Debug)]
+pub enum Value {
+    String(String),
+    Number(f32),
 }
-
-fn eval_loop(iters:f32, commands: VecDeque<Command>, image: &mut Image){
-    let n = iters as i32;
-    for _i in 0..n{
-        for cmd in &commands{
-            eval(cmd.clone(), image);
+impl Value {
+    fn get_number(&self) -> f32 {
+        match self {
+            Value::Number(x) => *x,
+            _ => panic!("get_number: value not a number"),
         }
     }
 }
 
-fn eval_expr(expr: Expr) -> f32 {
-    match expr {
-        Expr::Number(n) => n,
-        Expr::Add(e1, e2) => eval_expr(*e1) + eval_expr(*e2),
-        Expr::Mul(e1, e2) => eval_expr(*e1) * eval_expr(*e2),
-        Expr::Variable(name) => unimplemented!()
+pub struct EvalEnv {
+    pub image: Image,
+    functions: HashMap<String, (Vec<String>, VecDeque<Command>)>,
+    variables: HashMap<String, Value>,
+}
+impl EvalEnv {
+    pub fn new(w: f32, h: f32) -> Self {
+        EvalEnv {
+            image: Image::new(w, h),
+            functions: HashMap::new(),
+            variables: HashMap::new(),
+        }
+    }
+
+    pub fn eval(&mut self, cmd: Command, env: &HashMap<String, Value>) {
+        match cmd {
+            Command::Forward(expr) => self.image.forward(self.eval_expr(expr, env).get_number()),
+            Command::Backward(expr) => self.image.backward(self.eval_expr(expr, env).get_number()),
+            Command::Right(expr) => self.image.right(self.eval_expr(expr, env).get_number()),
+            Command::Left(expr) => self.image.left(self.eval_expr(expr, env).get_number()),
+            Command::Show(expr) => println!("{:?}", self.eval_expr(expr, env)),
+            Command::Repeat(iters, body) => {
+                self.eval_loop(self.eval_expr(iters, env).get_number(), body, env)
+            }
+            Command::FunctionCall(name, args) => self.call_function(name, args, env),
+            Command::FunctionDeclaration(name, args, cmds) => {
+                self.functions.insert(name, (args, cmds));
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn call_function(&mut self, name: String, arg_values: Vec<Expr>, env: &HashMap<String, Value>) {
+        if let Some((arg_names, func_body)) = self.functions.get(&name) {
+            if arg_names.len() != arg_values.len() {
+                panic!("Incorrect number of arguments for function call");
+            }
+            let mut local_vars = arg_names
+                .iter()
+                .zip(arg_values)
+                .map(|(arg, val)| (arg.clone(), self.eval_expr(val, env)))
+                .collect::<HashMap<String, Value>>();
+            {
+                self.eval_block(func_body, &local_vars);
+            }
+        } else {
+            panic!("Undefined function: {}", name);
+        }
+    }
+
+    fn eval_block(&mut self, commands: &VecDeque<Command>, env: &HashMap<String, Value>) {
+        for cmd in commands {
+            self.eval(cmd.clone(), &env);
+        }
+    }
+
+    fn eval_loop(&mut self, iters: f32, commands: VecDeque<Command>, env: &HashMap<String, Value>) {
+        let n = iters as i32;
+        for _i in 0..(n as i32) {
+            for cmd in &commands {
+                self.eval(cmd.clone(), env);
+            }
+        }
+    }
+
+    fn eval_expr(&self, expr: Expr, env: &HashMap<String, Value>) -> Value {
+        match expr {
+            Expr::Number(n) => Value::Number(n),
+            Expr::Add(e1, e2) => match (self.eval_expr(*e1, env), self.eval_expr(*e2, env)) {
+                (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 + n2),
+                // (Value::String(n1), Value::String(n2)) => Value::String(n1+&n2),
+                _ => panic!("add: wrong types"),
+            },
+            Expr::Mul(e1, e2) => match (self.eval_expr(*e1, env), self.eval_expr(*e2, env)) {
+                (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 * n2),
+                _ => panic!("add: wrong types"),
+            },
+            Expr::Variable(name) => match env.get(&name) {
+                Some(Value) => *Value,
+                _ => panic!("variable {} was not declared", name),
+            }, // TODO env lookup
+        }
     }
 }
-
 pub struct Image {
     x: f32,
     y: f32,
     angle: f32,
     svg: String,
     // width: f32, height: f32,
-    pen_width: f32, pen_color: String
+    pen_width: f32,
+    pen_color: String,
 }
 impl Image {
-    pub fn new(w:f32, h:f32) -> Self {
+    fn new(w: f32, h: f32) -> Self {
         Image {
-            x: w/2.0,
-            y: h/2.0,
+            x: w / 2.0,
+            y: h / 2.0,
             angle: 0.0,
             // width: w,
             // height: h,

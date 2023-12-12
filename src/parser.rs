@@ -30,8 +30,14 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
         match token {
             Token::Repeat => {
                 let iters = parse_expr(tokens);
-                let body = parse_block(tokens);
-                commands.push_back(Command::Repeat(iters, body))
+                if let Some(Token::LBracket)=tokens.pop_front(){
+                    
+                    let body = parse_block(tokens);
+                    commands.push_back(Command::Repeat(iters, body));
+                }
+                else{
+                    panic!("Repeat: block should start with a '['")
+                }
             }
 
             Token::To => {
@@ -117,10 +123,7 @@ fn parse_name(tokens: &mut VecDeque<Token>) -> String {
 }
 
 fn parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
-    match tokens.pop_front() {
-        Some(Token::LBracket) => parse(tokens),
-        _ => panic!("Parse block: block should start with a '['"),
-    }
+    parse(tokens)
 }
 
 fn parse_expr(tokens: &mut VecDeque<Token>) -> Expr {

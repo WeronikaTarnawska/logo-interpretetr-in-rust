@@ -2,7 +2,7 @@ mod evaluator;
 mod expr_parser;
 mod lexer;
 mod parser;
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 
 use clap::{App, Arg};
 use std::fs::File;
@@ -38,7 +38,8 @@ fn get_matches() -> clap::ArgMatches<'static> {
 }
 fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
-    let mut image = evaluator::Image::new(700.0, 500.0);
+    let mut eval: evaluator::EvalEnv = evaluator::EvalEnv::new(700.0, 500.0);
+    // let mut env: HashMap<String, evaluator::Value> = HashMap::new();
     if let Some(input_file) = matches.value_of("input") {
         /* Parse a script - Redirect input from file */
         let file = File::open(input_file).expect("Failed to open input file");
@@ -51,7 +52,7 @@ fn main() {
         let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
         for cmd in ast {
             println!("Parsed to:\n{:?}", cmd);
-            evaluator::eval(cmd, &mut image);
+            eval.eval(cmd, &HashMap::new());
         }
     } else {
         /* Start interactive session */
@@ -75,13 +76,13 @@ fn main() {
             let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
             for cmd in ast {
                 println!("Parsed to:\n{:?}", cmd);
-                evaluator::eval(cmd, &mut image);
+                eval.eval(cmd, &HashMap::new());
             }
         }
     }
     if let Some(output_file) = matches.value_of("graphisc") {
-        image.save_svg(&format!("{}.svg", output_file)[..]);
+        eval.image.save_svg(&format!("{}.svg", output_file)[..]);
     } else {
-        image.save_svg("output.svg");
+        eval.image.save_svg("output.svg");
     }
 }
