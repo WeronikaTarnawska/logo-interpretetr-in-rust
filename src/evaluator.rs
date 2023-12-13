@@ -95,17 +95,19 @@ fn eval_expr(
             _ => panic!("add: wrong types"),
         },
         Expr::Variable(name) => match variables.get(&name) {
-            Some(Value) => Value.clone(),
+            Some(value) => value.clone(),
             _ => panic!("variable {} was not declared", name),
-        }, // TODO env lookup
+        },
         Expr::Sub(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
             (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 - n2),
-            // (Value::String(n1), Value::String(n2)) => Value::String(n1+&n2),
-            _ => panic!("add: wrong types"),
+            _ => panic!("sub: wrong types"),
         },
         Expr::Div(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
-            (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 / n2),
-            // (Value::String(n1), Value::String(n2)) => Value::String(n1+&n2),
+            (Value::Number(n1), Value::Number(n2)) => if n2 == 0.0 {panic!("Attempt to divide by 0")} else {Value::Number(n1 / n2)},
+            _ => panic!("div: wrong types"),
+        },
+        Expr::Minus(e) => match eval_expr(*e, variables) {
+            Value::Number(n) => Value::Number(-n),
             _ => panic!("add: wrong types"),
         },
         _ => unimplemented!()

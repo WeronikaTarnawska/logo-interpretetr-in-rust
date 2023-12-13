@@ -6,6 +6,7 @@ use std::collections::VecDeque;
 pub enum Expr {
     Variable(String),
     Number(f32),
+    Minus(Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),

@@ -1,5 +1,5 @@
 use crate::{lexer::Token, parser::Expr};
-use std::{collections::VecDeque, sync::Arc};
+use std::collections::VecDeque;
 
 pub fn parse_addition(tokens: &mut VecDeque<Token>) -> Box<Expr> {
     let mut left_operand = parse_multiplication(tokens);
@@ -63,6 +63,10 @@ fn parse_operand(tokens: &mut VecDeque<Token>) -> Box<Expr> {
             result
         }
         Some(Token::RParen) => panic!("Unexpected ')' without '('"),
+        Some(Token::Sub) => {
+          let right = parse_operand(tokens);
+          return Box::new(Expr::Minus(right));
+        }
         _ => panic!("Invalid expression"),
     }
 }
