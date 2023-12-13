@@ -38,7 +38,8 @@ fn get_matches() -> clap::ArgMatches<'static> {
 }
 fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
-    let mut eval: evaluator::EvalEnv = evaluator::EvalEnv::new(700.0, 500.0);
+    let mut image = evaluator::Image::new(700.0, 500.0);
+    let mut functions:HashMap<String, (Vec<String>, VecDeque<parser::Command>)> = HashMap::new();
     // let mut env: HashMap<String, evaluator::Value> = HashMap::new();
     if let Some(input_file) = matches.value_of("input") {
         /* Parse a script - Redirect input from file */
@@ -52,7 +53,7 @@ fn main() {
         let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
         for cmd in ast {
             println!("Parsed to:\n{:?}", cmd);
-            eval.eval(cmd, &HashMap::new());
+            evaluator::eval(cmd, &mut functions, &HashMap::new(), &mut image);
         }
     } else {
         /* Start interactive session */
@@ -76,13 +77,14 @@ fn main() {
             let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
             for cmd in ast {
                 println!("Parsed to:\n{:?}", cmd);
-                eval.eval(cmd, &HashMap::new());
+                evaluator::eval(cmd, &mut functions, &HashMap::new(), &mut image);
+
             }
         }
     }
     if let Some(output_file) = matches.value_of("graphisc") {
-        eval.image.save_svg(&format!("{}.svg", output_file)[..]);
+        image.save_svg(&format!("{}.svg", output_file)[..]);
     } else {
-        eval.image.save_svg("output.svg");
+        image.save_svg("output.svg");
     }
 }

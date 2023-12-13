@@ -92,6 +92,7 @@ fn parse_expr_seq(tokens: &mut VecDeque<Token>) -> Vec<Expr> {
             | Some(Token::To) => {
                 break;
             }
+            None => {break;}
             _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
         }
     }
