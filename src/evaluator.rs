@@ -98,6 +98,17 @@ fn eval_expr(
             Some(Value) => Value.clone(),
             _ => panic!("variable {} was not declared", name),
         }, // TODO env lookup
+        Expr::Sub(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
+            (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 - n2),
+            // (Value::String(n1), Value::String(n2)) => Value::String(n1+&n2),
+            _ => panic!("add: wrong types"),
+        },
+        Expr::Div(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
+            (Value::Number(n1), Value::Number(n2)) => Value::Number(n1 / n2),
+            // (Value::String(n1), Value::String(n2)) => Value::String(n1+&n2),
+            _ => panic!("add: wrong types"),
+        },
+        _ => unimplemented!()
     }
 }
 

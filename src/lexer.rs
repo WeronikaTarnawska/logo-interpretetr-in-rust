@@ -7,6 +7,10 @@ pub enum Token {
     Mul,
     #[token("+")]
     Add,
+    #[token("-")]
+    Sub,
+    #[token("/")]
+    Div,
     #[token("(")]
     LParen,
     #[token(")")]
