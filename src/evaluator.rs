@@ -2,6 +2,7 @@ use crate::parser::{Command, Expr};
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::Write;
+use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -186,6 +187,12 @@ fn eval_expr(expr: Expr, variables: &HashMap<String, Value>) -> Value {
                 Value::Number(if n1 < n2 { 1.0 } else { 0.0 })
             }
             _ => panic!("(<): wrong types"),
+        },
+        Expr::Rand(e) => match eval_expr(*e, variables) {
+            Value::Number(n) => {
+                let mut rng = rand::thread_rng();
+                Value::Number(rng.gen_range(0..(n as i32)) as f32)},
+            _ => panic!("rand: wrong types"),
         },
     }
 }

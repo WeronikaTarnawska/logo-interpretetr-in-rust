@@ -42,13 +42,22 @@ pub enum Token {
     #[token("pick")]
     Pick, // pick [list] - take random elem from the list
     // colors red orange yellow green blue violet
-    #[token("red")] Red,
-    #[token("orange")]Orange,
-    #[token("yellow")]Yellow,
-    #[token("green")]Green,
-    #[token("blue")]Blue,
-    #[token("violet")]Violet,
-    #[token("black")]Black,
+    #[token("random")]
+    Random,
+    #[token("red")]
+    Red,
+    #[token("orange")]
+    Orange,
+    #[token("yellow")]
+    Yellow,
+    #[token("green")]
+    Green,
+    #[token("blue")]
+    Blue,
+    #[token("violet")]
+    Violet,
+    #[token("black")]
+    Black,
     #[regex(r"fd|forward")]
     Forward,
     #[regex(r"bk|back|backward")]

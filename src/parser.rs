@@ -12,6 +12,7 @@ pub enum Expr {
     Div(Box<Expr>, Box<Expr>),
     Sub(Box<Expr>, Box<Expr>),
     Lt(Box<Expr>, Box<Expr>),
+    Rand(Box<Expr>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -115,25 +116,10 @@ fn parse_expr_seq(tokens: &mut VecDeque<Token>) -> Vec<Expr> {
     let mut args: Vec<Expr> = vec![];
     loop {
         match tokens.front() {
-            Some(Token::Number(Some(_))) | Some(Token::Variable(_)) | Some(Token::LParen) => {
+            Some(Token::Number(Some(_))) | Some(Token::Variable(_)) | Some(Token::LParen) | Some(Token::Random)=> {
                 let expr = parse_expr(tokens);
                 args.push(expr);
             }
-            // Some(Token::Backward)
-            // | Some(Token::Forward)
-            // | Some(Token::Function(_))
-            // | Some(Token::Left)
-            // | Some(Token::Repeat)
-            // | Some(Token::Right)
-            // | Some(Token::Show)
-            // | Some(Token::To)
-            // | Some(Token::RBracket)
-            // | Some(Token::End) => {
-            //     break;
-            // }
-            // None => {
-            //     break;
-            // }
             _ => break
             // _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
         }

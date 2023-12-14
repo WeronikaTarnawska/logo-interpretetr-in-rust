@@ -91,6 +91,10 @@ fn parse_operand(tokens: &mut VecDeque<Token>) -> Box<Expr> {
           let right = parse_operand(tokens);
           return Box::new(Expr::Minus(right));
         }
+        Some(Token::Random) => {
+            let right = parse_operand(tokens);
+            return Box::new(Expr::Rand(right));
+        }
         _ => panic!("Invalid expression"),
     }
 }
