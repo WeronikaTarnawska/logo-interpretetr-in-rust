@@ -38,6 +38,8 @@ pub enum Token {
     /* built in procedures */
     #[token("show")]
     Show,
+    #[token("wait")]
+    Wait,
     #[token("pick")]
     Pick, // pick [list] - take random elem from the list
     /* colors: red orange yellow green blue violet */
@@ -78,6 +80,8 @@ pub enum Token {
     ShowTurtle,
     #[regex(r"ht|hideturtle")]
     HideTurtle,
+    #[token("setturtle")]
+    SetTurtle,
     /* datatypes */
     #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
     Number(Option<f32>),

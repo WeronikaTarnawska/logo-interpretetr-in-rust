@@ -3,6 +3,8 @@ use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::Write;
+use std::thread;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -80,6 +82,15 @@ fn eval(
             image.hideturtle();
             Ok(())
         }
+        Command::SetTurtle(expr) => {
+            image.setturtle(eval_expr(expr, variables).get_number());
+            Ok(())
+        }
+        Command::Wait(expr) => {
+            let x = eval_expr(expr, variables).get_number();
+            thread::sleep(Duration::from_millis((x * 1000.0) as u64));
+            Ok(())
+        }
         Command::Show(expr) => {
             println!("{:?}", eval_expr(expr, variables));
             Ok(())
@@ -124,8 +135,7 @@ fn eval(
                 _ => unimplemented!("setcolor: unimplemented"),
             }
             Ok(())
-        }
-        _ => panic!("invalid command"),
+        } // _ => panic!("invalid command"),
     }
 }
 
@@ -264,9 +274,11 @@ pub struct Image {
     pen_width: f32,
     pen_color: String,
     pen_active: bool,
-    turtle_visible : bool,
-    turtle_size : f32,
+    turtle_visible: bool,
+    turtle_size: f32,
     turtle_color: String,
+    cur_turtle_id: usize,
+    turtles: Vec<(f32, f32, bool)>,
 }
 impl Image {
     pub fn new(w: f32, h: f32) -> Self {
@@ -280,8 +292,10 @@ impl Image {
             pen_width: 1.0,
             pen_active: true,
             turtle_visible: true,
-            turtle_size:10.0,
+            turtle_size: 10.0,
             turtle_color: "green".to_string(),
+            turtles: vec![(w / 2.0, h / 2.0, true)],
+            cur_turtle_id: 0,
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
     }
@@ -306,6 +320,39 @@ impl Image {
     }
     fn hideturtle(&mut self) {
         self.turtle_visible = false;
+    }
+
+    fn saveturtle(&mut self) {
+        self.turtles[self.cur_turtle_id] = (self.x, self.y, self.turtle_visible);
+    }
+
+    fn loadturtle(&mut self, t: (f32, f32, bool), n:usize) {
+        let (x, y, v) = t;
+        self.x = x;
+        self.y = y;
+        self.turtle_visible = v;
+        self.cur_turtle_id=n;
+    }
+
+    fn newturtle(&mut self) {
+        self.x = self.width / 2.0;
+        self.y = self.height / 2.0;
+        self.turtle_visible = true;
+        self.cur_turtle_id = self.turtles.len();
+        self.turtles.push((self.x, self.y, true));
+    }
+
+    fn setturtle(&mut self, x: f32) {
+        let n = x as usize;
+        self.saveturtle();
+        if let Some(t) = self.turtles.get(n) {
+            self.loadturtle(*t, n);
+        } else if n == self.turtles.len() {
+            self.newturtle()
+        } else {
+            panic!("can't add turtle {}", n);
+        }
+        println!("turtle nr {}, x={}, y={}", n, self.x, self.y)
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
@@ -346,19 +393,29 @@ impl Image {
         // println!("image-left {}", self.angle);
     }
 
-    fn add_turtle_to_svg(&mut self){
-        //<circle cx="50" cy="50" r="50" />
-        let turtle = format!(
-            "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" stroke=\"{}\" stroke-width=\"{}\" fill=\"{}\" />\n",
-            self.x, self.y, self.turtle_size, self.pen_color, self.pen_width, self.turtle_color
-        );
-        self.svg.push_str(&turtle);
+    // fn add_turtle_to_svg(&mut self, x:f32, y:f32) {
+    //     let turtle = format!(
+    //         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" stroke=\"{}\" stroke-width=\"{}\" fill=\"{}\" />\n",
+    //         x, y, self.turtle_size, self.pen_color, self.pen_width, self.turtle_color
+    //     );
+    //     self.svg.push_str(&turtle);
+    // }
+
+    fn add_turtles_to_svg(&mut self) {
+        for (x, y, v) in &self.turtles {
+            if *v {
+                let turtle = format!(
+                    "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" stroke=\"{}\" stroke-width=\"{}\" fill=\"{}\" />\n",
+                    x, y, self.turtle_size, self.pen_color, self.pen_width, self.turtle_color
+                );
+                self.svg.push_str(&turtle);
+            }
+        }
     }
 
     pub fn save_svg(&mut self, filename: &str) {
-        if self.turtle_visible {
-            self.add_turtle_to_svg();
-        }
+        self.saveturtle();
+        self.add_turtles_to_svg();
         self.svg.push_str("</svg>");
         let mut file = File::create(filename).expect("Unable to create SVG file");
         file.write_all(self.svg.as_bytes())

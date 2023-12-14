@@ -37,6 +37,8 @@ pub enum Command {
     PenDown,
     ShowTurtle,
     HideTurtle,
+    SetTurtle(Expr),
+    Wait(Expr),
     // List(Vec<Expr>),
 }
 
@@ -98,6 +100,14 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
             Token::Setcolor => {
                 let color = parse_expr(tokens);
                 commands.push_back(Command::Setcolor(color));
+            }
+            Token::SetTurtle => {
+                let num = parse_expr(tokens);
+                commands.push_back(Command::SetTurtle(num));
+            }
+            Token::Wait => {
+                let num = parse_expr(tokens);
+                commands.push_back(Command::Wait(num));
             }
             _ => {
                 // TODO
