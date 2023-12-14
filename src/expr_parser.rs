@@ -89,13 +89,13 @@ fn parse_operand(tokens: &mut VecDeque<Token>) -> Box<Expr> {
             let from = parse_list(tokens);
             Box::new(Expr::Pick(from))
         }
-        Some(Token::Red) => Box::new(Expr::Color("red".to_string())),
+        Some(Token::Red)    => Box::new(Expr::Color("red".to_string())),
         Some(Token::Orange) => Box::new(Expr::Color("orange".to_string())),
         Some(Token::Yellow) => Box::new(Expr::Color("yellow".to_string())),
-        Some(Token::Green) => Box::new(Expr::Color("green".to_string())),
-        Some(Token::Blue) => Box::new(Expr::Color("blue".to_string())),
+        Some(Token::Green)  => Box::new(Expr::Color("green".to_string())),
+        Some(Token::Blue)   => Box::new(Expr::Color("blue".to_string())),
         Some(Token::Violet) => Box::new(Expr::Color("violet".to_string())),
-        Some(Token::Black) => Box::new(Expr::Color("black".to_string())),
+        Some(Token::Black)  => Box::new(Expr::Color("black".to_string())),
         _ => panic!("Invalid expression"),
     }
 }
@@ -127,14 +127,13 @@ fn parse_list(tokens: &mut VecDeque<Token>) -> VecDeque<Expr> {
                     exprs.push_back(*expr);
                 }
                 Token::RBracket => break,
-                _=> panic!("parse list invalid expr")
+                _ => panic!("parse list invalid expr"),
             }
         }
     }
-    if let Some(Token::RBracket) = tokens.pop_front(){
+    if let Some(Token::RBracket) = tokens.pop_front() {
         exprs
-    }
-    else{
+    } else {
         panic!("expr list: no closing ']'")
     }
 }
