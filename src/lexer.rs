@@ -92,21 +92,6 @@ pub enum Token {
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,
 }
-/* TODO
-- function declaration
-to name :arg1 :arg2
-  body
-end
-
-- function call
-builtin functions:
-* clearscreen
-* cleartext
-
-- lists
-[1 2 3]
-
-*/
 
 pub fn process(input: &str) -> VecDeque<Token> {
     let processed = Token::lexer(input)

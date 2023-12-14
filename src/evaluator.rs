@@ -352,7 +352,6 @@ impl Image {
         } else {
             panic!("can't add turtle {}", n);
         }
-        println!("turtle nr {}, x={}, y={}", n, self.x, self.y)
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
@@ -392,14 +391,6 @@ impl Image {
         self.angle -= angle;
         // println!("image-left {}", self.angle);
     }
-
-    // fn add_turtle_to_svg(&mut self, x:f32, y:f32) {
-    //     let turtle = format!(
-    //         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" stroke=\"{}\" stroke-width=\"{}\" fill=\"{}\" />\n",
-    //         x, y, self.turtle_size, self.pen_color, self.pen_width, self.turtle_color
-    //     );
-    //     self.svg.push_str(&turtle);
-    // }
 
     fn add_turtles_to_svg(&mut self) {
         for (x, y, v) in &self.turtles {

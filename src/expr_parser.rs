@@ -42,11 +42,6 @@ fn parse_addition(tokens: &mut VecDeque<Token>) -> Box<Expr> {
             _ => break,
         }
     }
-    // while let Some(&Token::Add) = tokens.front() {
-    //     tokens.pop_front(); // Consume the '+'
-    //     let right_operand = parse_multiplication(tokens);
-    //     left_operand = Box::new(Expr::Add(left_operand, right_operand));
-    // }
 
     left_operand
 }
@@ -68,11 +63,6 @@ fn parse_multiplication(tokens: &mut VecDeque<Token>) -> Box<Expr> {
             _ => break,
         }
     }
-    // while let Some(&Token::Mul) = tokens.front() {
-    //     tokens.pop_front(); // Consume the '*'
-    //     let right_operand = parse_operand(tokens);
-    //     left_operand = Box::new(Expr::Mul(left_operand, right_operand));
-    // }
 
     left_operand
 }

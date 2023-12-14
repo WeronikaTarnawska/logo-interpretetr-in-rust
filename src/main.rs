@@ -40,7 +40,6 @@ fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
     let mut image = evaluator::Image::new(700.0, 700.0);
     let mut functions: HashMap<String, (Vec<String>, VecDeque<parser::Command>)> = HashMap::new();
-    // let mut env: HashMap<String, evaluator::Value> = HashMap::new();
     if let Some(input_file) = matches.value_of("input") {
         /* Parse a script - Redirect input from file */
         let file = File::open(input_file).expect("Failed to open input file");
@@ -49,9 +48,12 @@ fn main() {
         if reader.read_to_string(&mut prog).is_err() {
             panic!("Can not read input file")
         }
+        
         let mut tokens: VecDeque<lexer::Token> = lexer::process(prog.as_str());
+        println!("Tokenized to:\n{:?}\n**********************************************************", tokens);
+        
         let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
-        println!("parsed to");
+        println!("Parsed to:");
         for cmd in ast.clone(){
             println!("{:?}", cmd);
         }
