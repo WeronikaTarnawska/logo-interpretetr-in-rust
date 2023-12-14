@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 
 #[derive(Debug, Logos, PartialEq)]
 pub enum Token {
+    /* arithmetic expressions */
     #[token("*")]
     Mul,
     #[token("+")]
@@ -17,6 +18,7 @@ pub enum Token {
     LParen,
     #[token(")")]
     RParen,
+    /* control flow */
     #[token("[")]
     LBracket,
     #[token("]")]
@@ -33,15 +35,12 @@ pub enum Token {
     To,
     #[regex(r"end|END")]
     End,
+    /* built in procedures */
     #[token("show")]
     Show,
-    #[token("clearscreen")]
-    Clearscreen,
-    #[token("setcolor")]
-    Setcolor,
     #[token("pick")]
     Pick, // pick [list] - take random elem from the list
-    // colors red orange yellow green blue violet
+    /* colors: red orange yellow green blue violet */
     #[token("random")]
     Random,
     #[token("red")]
@@ -58,6 +57,11 @@ pub enum Token {
     Violet,
     #[token("black")]
     Black,
+    /* image */
+    #[token("clearscreen")]
+    Clearscreen,
+    #[token("setcolor")]
+    Setcolor,
     #[regex(r"fd|forward")]
     Forward,
     #[regex(r"bk|back|backward")]
@@ -66,6 +70,11 @@ pub enum Token {
     Left,
     #[regex(r"rt|right")]
     Right,
+    #[regex(r"pu|penup")]
+    PenUp,
+    #[regex(r"pd|pendown")]
+    PenDown,
+    /* datatypes */
     #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
     Number(Option<f32>),
     #[regex(r":[a-z]+", |lex| lex.slice().to_string())]

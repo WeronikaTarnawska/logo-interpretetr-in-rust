@@ -1,12 +1,13 @@
 use crate::parser::{Command, Expr};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::Write;
-use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub enum Value {
     _String(String),
+    Color(String),
     Number(f32),
 }
 impl Value {
@@ -31,7 +32,9 @@ pub fn eval_all(
     for cmd in ast {
         // println!(" Parsed to:\n{:?}", cmd);
         match eval(cmd, functions, variables, image) {
-            Err(e)  => {return Err(e);},
+            Err(e) => {
+                return Err(e);
+            }
             Ok(()) => {}
         };
     }
@@ -45,11 +48,26 @@ fn eval(
     image: &mut Image,
 ) -> Result<(), LogoErr> {
     match cmd {
-        Command::Forward(expr) => {image.forward(eval_expr(expr, variables).get_number());Ok(())},
-        Command::Backward(expr) => {image.backward(eval_expr(expr, variables).get_number());Ok(())},
-        Command::Right(expr) => {image.right(eval_expr(expr, variables).get_number());Ok(())},
-        Command::Left(expr) => {image.left(eval_expr(expr, variables).get_number());Ok(())},
-        Command::Show(expr) => {println!("{:?}", eval_expr(expr, variables));Ok(())},
+        Command::Forward(expr) => {
+            image.forward(eval_expr(expr, variables).get_number());
+            Ok(())
+        }
+        Command::Backward(expr) => {
+            image.backward(eval_expr(expr, variables).get_number());
+            Ok(())
+        }
+        Command::Right(expr) => {
+            image.right(eval_expr(expr, variables).get_number());
+            Ok(())
+        }
+        Command::Left(expr) => {
+            image.left(eval_expr(expr, variables).get_number());
+            Ok(())
+        }
+        Command::Show(expr) => {
+            println!("{:?}", eval_expr(expr, variables));
+            Ok(())
+        }
         Command::Repeat(iters, body) => eval_loop(
             eval_expr(iters, variables).get_number(),
             body,
@@ -78,16 +96,20 @@ fn eval(
             functions.insert(name, (args, cmds));
             Ok(())
         }
-        Command::Clearscreen => {image.clear(); Ok(())},
+        Command::Clearscreen => {
+            image.clear();
+            Ok(())
+        }
         Command::Stop => Err(LogoErr::Stop),
         Command::Setcolor(cmd) => {
-            match *cmd{
-            Command::Color(c) => image.setcolor(c),
-            _=> unimplemented!("setcolor: unimplemented")
+            let col = eval_expr(cmd, variables);
+            match col {
+                Value::Color(c) => image.setcolor(c),
+                _ => unimplemented!("setcolor: unimplemented"),
             }
             Ok(())
-        },
-        _ => panic!("invalid command")
+        }
+        _ => panic!("invalid command"),
     }
 }
 
@@ -113,7 +135,7 @@ fn call_function(
     functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
     variables: &HashMap<String, Value>,
     image: &mut Image,
-) -> Result<(), LogoErr>{
+) -> Result<(), LogoErr> {
     if let Some((arg_names, func_body)) = functions.get(&name) {
         let func_body = func_body.clone();
         if arg_names.len() != arg_values.len() {
@@ -146,6 +168,14 @@ fn eval_loop(
         };
     }
     Ok(())
+}
+
+fn eval_list(exprs: VecDeque<Expr>, variables: &HashMap<String, Value>) -> Vec<Value> {
+    let mut result = vec![];
+    for e in exprs {
+        result.push(eval_expr(e, variables))
+    }
+    result
 }
 
 fn eval_expr(expr: Expr, variables: &HashMap<String, Value>) -> Value {
@@ -191,9 +221,20 @@ fn eval_expr(expr: Expr, variables: &HashMap<String, Value>) -> Value {
         Expr::Rand(e) => match eval_expr(*e, variables) {
             Value::Number(n) => {
                 let mut rng = rand::thread_rng();
-                Value::Number(rng.gen_range(0..(n as i32)) as f32)},
+                Value::Number(rng.gen_range(0..(n as i32)) as f32)
+            }
             _ => panic!("rand: wrong types"),
         },
+        Expr::Color(c) => Value::Color(c),
+        Expr::Pick(exprs) => {
+            let lst = eval_list(exprs, variables);
+            let mut rng = rand::thread_rng();
+            if let Some(v) = lst.get(rng.gen_range(0..lst.len()))  {
+                v.clone()
+            } else {
+                panic!("pick needs at least one option, bu vector is empty")
+            }
+        }
     }
 }
 
@@ -225,8 +266,8 @@ impl Image {
         self.svg = format!("<svg width=\"{}\" height=\"{}\">", self.width, self.height).to_string()
     }
 
-    fn setcolor(&mut self, color: String){
-        self.pen_color=color;
+    fn setcolor(&mut self, color: String) {
+        self.pen_color = color;
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
@@ -258,9 +299,8 @@ impl Image {
     fn right(&mut self, angle: f32) {
         self.angle += angle;
         // println!("image-right {}", self.angle);
-
     }
-    
+
     fn left(&mut self, angle: f32) {
         self.angle -= angle;
         // println!("image-left {}", self.angle);

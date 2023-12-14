@@ -13,7 +13,10 @@ pub enum Expr {
     Sub(Box<Expr>, Box<Expr>),
     Lt(Box<Expr>, Box<Expr>),
     Rand(Box<Expr>),
+    Color(String),
+    Pick(VecDeque<Expr>),
 }
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Command {
@@ -29,8 +32,7 @@ pub enum Command {
     IfElse(Expr, VecDeque<Command>, VecDeque<Command>),
     Clearscreen,
     Stop,
-    Setcolor(Box<Command>),
-    Color(String),
+    Setcolor(Expr),
     // List(Vec<Expr>),
 }
 
@@ -86,8 +88,8 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
             Token::Clearscreen => commands.push_back(Command::Clearscreen),
             Token::Stop => commands.push_back(Command::Stop),
             Token::Setcolor => {
-                let color = parse_color(tokens);
-                commands.push_back(Command::Setcolor(Box::new(color)));
+                let color = parse_expr(tokens);
+                commands.push_back(Command::Setcolor(color));
             }
             _ => {
                 // TODO
@@ -95,20 +97,6 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
         }
     }
     commands
-}
-
-fn parse_color(tokens: &mut VecDeque<Token>) -> Command {
-    match tokens.pop_front() {
-        Some(Token::Pick) => unimplemented!("parse list for color picking"),
-        Some(Token::Red) => Command::Color("red".to_string()),
-        Some(Token::Orange) => Command::Color("orange".to_string()),
-        Some(Token::Yellow) => Command::Color("yellow".to_string()),
-        Some(Token::Green) => Command::Color("green".to_string()),
-        Some(Token::Blue) => Command::Color("blue".to_string()),
-        Some(Token::Violet) => Command::Color("violet".to_string()),
-        Some(Token::Black) => Command::Color("black".to_string()),
-        _=> panic!("not a color"),
-    }
 }
 
 
