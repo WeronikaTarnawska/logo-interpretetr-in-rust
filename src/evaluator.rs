@@ -30,11 +30,35 @@ pub fn eval(
         Command::Left(expr) => image.left(eval_expr(expr, variables).get_number()),
         Command::Show(expr) => println!("{:?}", eval_expr(expr, variables)),
         Command::Repeat(iters, body) => eval_loop(eval_expr(iters, variables).get_number(), body,functions, variables, image),
+        Command::If(pred,ifcommands ) => eval_ifelse(eval_expr(pred, variables).get_number(), ifcommands, VecDeque::new(), functions, variables, image),
+        Command::IfElse(pred,ifcommands , elsecommands) => eval_ifelse(eval_expr(pred, variables).get_number(), ifcommands, elsecommands, functions, variables, image),
         Command::FunctionCall(name, args) => call_function(name, args, functions,variables, image),
         Command::FunctionDeclaration(name, args, cmds) => {
             functions.insert(name, (args, cmds));
         }
+        Command::Clearscreen => image.clear(),
         _ => unreachable!(),
+    }
+}
+
+fn eval_ifelse(
+    pred: f32,
+    ifcommands: VecDeque<Command>,
+    elsecommands: VecDeque<Command>,
+    functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
+    variables: &HashMap<String, Value>,
+    image: &mut Image,
+) {
+    let n = pred != 0.0;
+    if n {
+        for cmd in &ifcommands {
+            eval(cmd.clone(), functions, variables, image);
+        }
+    }
+    else {
+        for cmd in &elsecommands {
+            eval(cmd.clone(), functions, variables, image);
+        }
     }
 }
 
@@ -119,7 +143,7 @@ pub struct Image {
     y: f32,
     angle: f32,
     svg: String,
-    // width: f32, height: f32,
+    width: f32, height: f32,
     pen_width: f32,
     pen_color: String,
 }
@@ -129,12 +153,16 @@ impl Image {
             x: w / 2.0,
             y: h / 2.0,
             angle: 0.0,
-            // width: w,
-            // height: h,
+            width: w,
+            height: h,
             pen_color: "red".to_string(),
             pen_width: 2.0,
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
+    }
+
+    fn clear(&mut self){
+        self.svg = format!("<svg width=\"{}\" height=\"{}\">", self.width, self.height).to_string()
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {

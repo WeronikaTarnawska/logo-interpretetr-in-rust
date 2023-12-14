@@ -23,6 +23,9 @@ pub enum Command {
     Repeat(Expr, VecDeque<Command>),
     FunctionDeclaration(String, Vec<String>, VecDeque<Command>),
     FunctionCall(String, Vec<Expr>),
+    If(Expr, VecDeque<Command>),
+    IfElse(Expr, VecDeque<Command>, VecDeque<Command>),
+    Clearscreen,
     // List(Vec<Expr>),
 }
 
@@ -31,16 +34,27 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
 
     while let Some(token) = tokens.pop_front() {
         match token {
+            Token::If => {
+                let pred = parse_expr(tokens);
+                let body = parse_block_brackets(tokens);
+                commands.push_back(Command::If(pred, body));
+            }
+            Token::IfElse => {
+                let pred = parse_expr(tokens);
+                let if_body = parse_block_brackets(tokens);
+                let else_body = parse_block_brackets(tokens);
+                commands.push_back(Command::IfElse(pred, if_body, else_body));
+            }
             Token::Repeat => {
                 let iters = parse_expr(tokens);
-                let body = parse_block_loop(tokens);
+                let body = parse_block_brackets(tokens);
                 commands.push_back(Command::Repeat(iters, body));
             }
 
             Token::To => {
                 let name = parse_name(tokens);
                 let args = parse_args(tokens);
-                let body = parse_block_fun(tokens);
+                let body = parse_block_end(tokens);
                 commands.push_back(Command::FunctionDeclaration(name, args, body));
             }
 
@@ -64,6 +78,7 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
                 tokens.push_front(token);
                 return commands;
             }
+            Token::Clearscreen => commands.push_back(Command::Clearscreen),
             _ => {
                 // TODO
             }
@@ -131,16 +146,16 @@ fn _parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     parse(tokens)
 }
 
-fn parse_block_fun(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
+fn parse_block_end(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     let body = parse(tokens);
     if let Some(Token::End) = tokens.pop_front() {
         body
     } else {
-        panic!("Repeat: block should end with a ']'")
+        panic!("Repeat: block should end with END")
     }
 }
 
-fn parse_block_loop(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
+fn parse_block_brackets(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     if let Some(Token::LBracket) = tokens.pop_front() {
         let body = parse(tokens);
         if let Some(Token::RBracket) = tokens.pop_front() {
@@ -433,6 +448,37 @@ mod tests {
         assert_eq!(ast, expected);
     }
 
+    #[test]
+fn test_parser_if_statement() {
+    use Command::{If, Show};
+    use Expr::{*};
+
+    // Test case with if statement
+    let input = "if 4 [show 9]";
+    let mut tokens = process(input);
+    let ast = parse(&mut tokens);
+
+    let expected = vec_to_vecdeque(vec![If(Number(4.0), vec_to_vecdeque(vec![Show(Number(9.0))]))]);
+    
+    assert_eq!(ast, expected);
+}
+
+#[test]
+fn test_parser_ifelse_statement() {
+    use Command::{IfElse, Show};
+    use Expr::{*};
+    // Test case with ifelse statement
+    let input = "ifelse 3-3 [show 12] [show 2137]";
+    let mut tokens = process(input);
+    let ast = parse(&mut tokens);
+
+    let expected = vec_to_vecdeque(vec![IfElse(Sub(Box::new(Number(3.0)), Box::new(Number(3.0))), 
+        vec_to_vecdeque(vec![Show(Number(12.0))]), 
+        vec_to_vecdeque(vec![Show(Number(2137.0))]))]);
+    
+    assert_eq!(ast, expected);
+}
+
 
 }
 
@@ -481,4 +527,12 @@ Parsed to:
 Show(Sub(Add(Add(Sub(Sub(Add(Add(Add(Number(3.0), Mul(Number(5.0), Number(8.0))), Number(9.0)), Div(Div(Number(9.0), Number(8.0)), Number(1.0))), Number(2.0)), Number(6.0)), Number(5.0)), Number(3.0)), Div(Mul(Number(4.0), Number(2.0)), Number(3.0))))
 Result:
 Number(50.458332)
+
+
+>> if 4 [show 9]
+Parsed to:
+If(Number(4.0), [Show(Number(9.0))])
+>> ifelse 3-3 [show 12] [show 2137]
+Parsed to:
+IfElse(Sub(Number(3.0), Number(3.0)), [Show(Number(12.0))], [Show(Number(2137.0))])
 */

@@ -21,8 +21,14 @@ pub enum Token {
     RBracket,
     #[token("repeat")]
     Repeat,
+    #[token("if")]
+    If,
+    #[token("ifelse")]
+    IfElse,
     #[token("show")]
     Show,
+    #[token("clearscreen")]
+    Clearscreen,
     #[regex(r"fd|forward")]
     Forward,
     #[regex(r"bk|back|backward")]
