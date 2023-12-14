@@ -38,7 +38,7 @@ fn get_matches() -> clap::ArgMatches<'static> {
 }
 fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
-    let mut image = evaluator::Image::new(500.0, 500.0);
+    let mut image = evaluator::Image::new(700.0, 700.0);
     let mut functions: HashMap<String, (Vec<String>, VecDeque<parser::Command>)> = HashMap::new();
     // let mut env: HashMap<String, evaluator::Value> = HashMap::new();
     if let Some(input_file) = matches.value_of("input") {

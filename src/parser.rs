@@ -33,6 +33,8 @@ pub enum Command {
     Clearscreen,
     Stop,
     Setcolor(Expr),
+    PenUp,
+    PenDown,
     // List(Vec<Expr>),
 }
 
@@ -85,6 +87,8 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
                 tokens.push_front(token);
                 return commands;
             }
+            Token::PenDown => commands.push_back(Command::PenDown),
+            Token::PenUp => commands.push_back(Command::PenUp),
             Token::Clearscreen => commands.push_back(Command::Clearscreen),
             Token::Stop => commands.push_back(Command::Stop),
             Token::Setcolor => {

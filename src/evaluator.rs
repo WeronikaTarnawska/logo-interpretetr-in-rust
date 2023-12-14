@@ -64,6 +64,14 @@ fn eval(
             image.left(eval_expr(expr, variables).get_number());
             Ok(())
         }
+        Command::PenDown => {
+            image.pendown();
+            Ok(())
+        }
+        Command::PenUp => {
+            image.penup();
+            Ok(())
+        }
         Command::Show(expr) => {
             println!("{:?}", eval_expr(expr, variables));
             Ok(())
@@ -229,7 +237,7 @@ fn eval_expr(expr: Expr, variables: &HashMap<String, Value>) -> Value {
         Expr::Pick(exprs) => {
             let lst = eval_list(exprs, variables);
             let mut rng = rand::thread_rng();
-            if let Some(v) = lst.get(rng.gen_range(0..lst.len()))  {
+            if let Some(v) = lst.get(rng.gen_range(0..lst.len())) {
                 v.clone()
             } else {
                 panic!("pick needs at least one option, bu vector is empty")
@@ -247,6 +255,7 @@ pub struct Image {
     height: f32,
     pen_width: f32,
     pen_color: String,
+    pen_active: bool,
 }
 impl Image {
     pub fn new(w: f32, h: f32) -> Self {
@@ -258,6 +267,7 @@ impl Image {
             height: h,
             pen_color: "black".to_string(),
             pen_width: 1.0,
+            pen_active: true,
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
     }
@@ -268,6 +278,13 @@ impl Image {
 
     fn setcolor(&mut self, color: String) {
         self.pen_color = color;
+    }
+
+    fn penup(&mut self) {
+        self.pen_active = false;
+    }
+    fn pendown(&mut self) {
+        self.pen_active = true;
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
@@ -285,7 +302,9 @@ impl Image {
     }
     fn forward(&mut self, dist: f32) {
         let (new_x, new_y) = self.calculate_new_position(dist);
-        self.add_line_to_svg(self.x, self.y, new_x, new_y);
+        if self.pen_active {
+            self.add_line_to_svg(self.x, self.y, new_x, new_y);
+        }
         self.x = new_x;
         self.y = new_y;
         // println!("image-forward {}, {}", self.x, self.y);
