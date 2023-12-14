@@ -72,6 +72,14 @@ fn eval(
             image.penup();
             Ok(())
         }
+        Command::ShowTurtle => {
+            image.showturtle();
+            Ok(())
+        }
+        Command::HideTurtle => {
+            image.hideturtle();
+            Ok(())
+        }
         Command::Show(expr) => {
             println!("{:?}", eval_expr(expr, variables));
             Ok(())
@@ -256,6 +264,9 @@ pub struct Image {
     pen_width: f32,
     pen_color: String,
     pen_active: bool,
+    turtle_visible : bool,
+    turtle_size : f32,
+    turtle_color: String,
 }
 impl Image {
     pub fn new(w: f32, h: f32) -> Self {
@@ -268,6 +279,9 @@ impl Image {
             pen_color: "black".to_string(),
             pen_width: 1.0,
             pen_active: true,
+            turtle_visible: true,
+            turtle_size:10.0,
+            turtle_color: "green".to_string(),
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
     }
@@ -285,6 +299,13 @@ impl Image {
     }
     fn pendown(&mut self) {
         self.pen_active = true;
+    }
+
+    fn showturtle(&mut self) {
+        self.turtle_visible = true;
+    }
+    fn hideturtle(&mut self) {
+        self.turtle_visible = false;
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
@@ -324,7 +345,20 @@ impl Image {
         self.angle -= angle;
         // println!("image-left {}", self.angle);
     }
+
+    fn add_turtle_to_svg(&mut self){
+        //<circle cx="50" cy="50" r="50" />
+        let turtle = format!(
+            "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" stroke=\"{}\" stroke-width=\"{}\" fill=\"{}\" />\n",
+            self.x, self.y, self.turtle_size, self.pen_color, self.pen_width, self.turtle_color
+        );
+        self.svg.push_str(&turtle);
+    }
+
     pub fn save_svg(&mut self, filename: &str) {
+        if self.turtle_visible {
+            self.add_turtle_to_svg();
+        }
         self.svg.push_str("</svg>");
         let mut file = File::create(filename).expect("Unable to create SVG file");
         file.write_all(self.svg.as_bytes())

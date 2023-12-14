@@ -74,6 +74,10 @@ pub enum Token {
     PenUp,
     #[regex(r"pd|pendown")]
     PenDown,
+    #[regex(r"st|showturtle")]
+    ShowTurtle,
+    #[regex(r"ht|hideturtle")]
+    HideTurtle,
     /* datatypes */
     #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
     Number(Option<f32>),

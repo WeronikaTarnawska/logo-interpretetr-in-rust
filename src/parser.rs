@@ -35,6 +35,8 @@ pub enum Command {
     Setcolor(Expr),
     PenUp,
     PenDown,
+    ShowTurtle,
+    HideTurtle,
     // List(Vec<Expr>),
 }
 
@@ -91,6 +93,8 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
             Token::PenUp => commands.push_back(Command::PenUp),
             Token::Clearscreen => commands.push_back(Command::Clearscreen),
             Token::Stop => commands.push_back(Command::Stop),
+            Token::ShowTurtle => commands.push_back(Command::ShowTurtle),
+            Token::HideTurtle => commands.push_back(Command::HideTurtle),
             Token::Setcolor => {
                 let color = parse_expr(tokens);
                 commands.push_back(Command::Setcolor(color));
