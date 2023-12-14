@@ -11,6 +11,7 @@ pub enum Expr {
     Add(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),
     Sub(Box<Expr>, Box<Expr>),
+    Lt(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -169,7 +170,7 @@ fn parse_block_brackets(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
 }
 
 fn parse_expr(tokens: &mut VecDeque<Token>) -> Expr {
-    *expr_parser::parse_addition(tokens)
+    *expr_parser::parse(tokens)
 }
 
 #[cfg(test)]

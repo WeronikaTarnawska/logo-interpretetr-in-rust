@@ -134,6 +134,10 @@ fn eval_expr(
             Value::Number(n) => Value::Number(-n),
             _ => panic!("add: wrong types"),
         },
+        Expr::Lt(e1,e2 ) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
+            (Value::Number(n1), Value::Number(n2)) => Value::Number(if n1 < n2 {1.0} else {0.0}),
+            _ => panic!("(<): wrong types"),
+        },
         _ => unimplemented!()
     }
 }

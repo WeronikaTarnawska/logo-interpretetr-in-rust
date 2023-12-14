@@ -1,7 +1,31 @@
 use crate::{lexer::Token, parser::Expr};
 use std::collections::VecDeque;
 
-pub fn parse_addition(tokens: &mut VecDeque<Token>) -> Box<Expr> {
+pub fn parse(tokens: &mut VecDeque<Token>) -> Box<Expr> {
+    parse_eq(tokens)
+}
+
+fn parse_eq(tokens: &mut VecDeque<Token>) -> Box<Expr> {
+    let mut left_operand = parse_addition(tokens);
+    loop {
+        match tokens.front() {
+            Some(&Token::Lt) => {
+                tokens.pop_front(); 
+                let right_operand = parse_addition(tokens);
+                left_operand = Box::new(Expr::Lt(left_operand, right_operand));
+            }
+            // Some(&Token::Leq) => {
+            //     tokens.pop_front();
+            //     let right_operand = parse_addition(tokens);
+            //     left_operand = Box::new(Expr::Leq(left_operand, right_operand));
+            // }
+            _ => break,
+        }
+    }
+    left_operand
+}
+
+fn parse_addition(tokens: &mut VecDeque<Token>) -> Box<Expr> {
     let mut left_operand = parse_multiplication(tokens);
     loop {
         match tokens.front() {

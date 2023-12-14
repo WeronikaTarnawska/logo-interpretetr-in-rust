@@ -11,6 +11,8 @@ pub enum Token {
     Sub,
     #[token("/")]
     Div,
+    #[token("<")]
+    Lt,
     #[token("(")]
     LParen,
     #[token(")")]
