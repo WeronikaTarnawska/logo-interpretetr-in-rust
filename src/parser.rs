@@ -2,6 +2,7 @@ use crate::expr_parser;
 use crate::lexer::Token;
 use std::collections::VecDeque;
 
+/* Expr evauates to some value that can be used by commands */
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Variable(String),
@@ -17,7 +18,7 @@ pub enum Expr {
     Pick(VecDeque<Expr>),
 }
 
-
+/* Command handles turtle graphisc, stdout, programm state */
 #[derive(Debug, PartialEq, Clone)]
 pub enum Command {
     Forward(Expr),
