@@ -23,6 +23,8 @@ pub enum Token {
     RBracket,
     #[token("repeat")]
     Repeat,
+    #[token("stop")]
+    Stop,
     #[token("if")]
     If,
     #[token("ifelse")]

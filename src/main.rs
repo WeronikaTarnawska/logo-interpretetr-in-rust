@@ -38,7 +38,7 @@ fn get_matches() -> clap::ArgMatches<'static> {
 }
 fn main() {
     let matches: clap::ArgMatches<'_> = get_matches();
-    let mut image = evaluator::Image::new(700.0, 500.0);
+    let mut image = evaluator::Image::new(500.0, 500.0);
     let mut functions: HashMap<String, (Vec<String>, VecDeque<parser::Command>)> = HashMap::new();
     // let mut env: HashMap<String, evaluator::Value> = HashMap::new();
     if let Some(input_file) = matches.value_of("input") {
@@ -51,10 +51,9 @@ fn main() {
         }
         let mut tokens: VecDeque<lexer::Token> = lexer::process(prog.as_str());
         let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
-        for cmd in ast {
-            println!("Parsed to:\n{:?}", cmd);
-            evaluator::eval(cmd, &mut functions, &HashMap::new(), &mut image);
-        }
+        _ = evaluator::eval_all(ast, &mut functions, &HashMap::new(), &mut image);
+
+        
     } else {
         /* Start interactive session */
         println!("Enter Logo command (or 'exit' to quit)");
@@ -75,10 +74,7 @@ fn main() {
             }
             let mut tokens: VecDeque<lexer::Token> = lexer::process(input);
             let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
-            for cmd in ast {
-                println!("Parsed to:\n{:?}", cmd);
-                evaluator::eval(cmd, &mut functions, &HashMap::new(), &mut image);
-            }
+            _ = evaluator::eval_all(ast, &mut functions, &HashMap::new(), &mut image);
         }
     }
     if let Some(output_file) = matches.value_of("graphisc") {
@@ -86,63 +82,4 @@ fn main() {
     } else {
         image.save_svg("output.svg");
     }
-}
-
-use parser::{Command, Expr};
-fn _test() {
-    let mut image = evaluator::Image::new(700.0, 500.0);
-    let mut functions: HashMap<String, (Vec<String>, VecDeque<parser::Command>)> = HashMap::new();
-    let expected = vec_to_vecdeque(vec![Command::Show(Expr::Add(
-        Box::new(Expr::Sub(
-            Box::new(Expr::Add(
-                Box::new(Expr::Number(3.0)),
-                Box::new(Expr::Add(
-                    Box::new(Expr::Mul(
-                        Box::new(Expr::Number(5.0)),
-                        Box::new(Expr::Number(8.0)),
-                    )),
-                    Box::new(Expr::Number(9.0)),
-                )),
-            )),
-            Box::new(Expr::Div(
-                Box::new(Expr::Div(
-                    Box::new(Expr::Number(9.0)),
-                    Box::new(Expr::Number(8.0)),
-                )),
-                Box::new(Expr::Number(1.0)),
-            )),
-        )),
-        Box::new(Expr::Sub(
-            Box::new(Expr::Sub(
-                Box::new(Expr::Sub(
-                    Box::new(Expr::Number(2.0)),
-                    Box::new(Expr::Number(6.0)),
-                )),
-                Box::new(Expr::Add(
-                    Box::new(Expr::Add(
-                        Box::new(Expr::Number(5.0)),
-                        Box::new(Expr::Number(3.0)),
-                    )),
-                    Box::new(Expr::Div(
-                        Box::new(Expr::Mul(
-                            Box::new(Expr::Number(4.0)),
-                            Box::new(Expr::Number(2.0)),
-                        )),
-                        Box::new(Expr::Number(3.0)),
-                    )),
-                )),
-            )),
-            Box::new(Expr::Number(4.0)),
-        )),
-    ))]);
-
-    for cmd in expected {
-        evaluator::eval(cmd, &mut functions, &HashMap::new(), &mut image);
-    }
-}
-
-fn vec_to_vecdeque(vec: Vec<Command>) -> VecDeque<Command> {
-    let mut deque = VecDeque::new();
-    deque.extend(vec);
-    deque
 }

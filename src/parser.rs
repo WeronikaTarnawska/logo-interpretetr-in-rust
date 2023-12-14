@@ -27,6 +27,7 @@ pub enum Command {
     If(Expr, VecDeque<Command>),
     IfElse(Expr, VecDeque<Command>, VecDeque<Command>),
     Clearscreen,
+    Stop,
     // List(Vec<Expr>),
 }
 
@@ -51,7 +52,7 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
                 let body = parse_block_brackets(tokens);
                 commands.push_back(Command::Repeat(iters, body));
             }
-
+            
             Token::To => {
                 let name = parse_name(tokens);
                 let args = parse_args(tokens);
@@ -80,6 +81,7 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
                 return commands;
             }
             Token::Clearscreen => commands.push_back(Command::Clearscreen),
+            Token::Stop => commands.push_back(Command::Stop),
             _ => {
                 // TODO
             }
@@ -96,22 +98,23 @@ fn parse_expr_seq(tokens: &mut VecDeque<Token>) -> Vec<Expr> {
                 let expr = parse_expr(tokens);
                 args.push(expr);
             }
-            Some(Token::Backward)
-            | Some(Token::Forward)
-            | Some(Token::Function(_))
-            | Some(Token::Left)
-            | Some(Token::Repeat)
-            | Some(Token::Right)
-            | Some(Token::Show)
-            | Some(Token::To)
-            | Some(Token::RBracket)
-            | Some(Token::End) => {
-                break;
-            }
-            None => {
-                break;
-            }
-            _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
+            // Some(Token::Backward)
+            // | Some(Token::Forward)
+            // | Some(Token::Function(_))
+            // | Some(Token::Left)
+            // | Some(Token::Repeat)
+            // | Some(Token::Right)
+            // | Some(Token::Show)
+            // | Some(Token::To)
+            // | Some(Token::RBracket)
+            // | Some(Token::End) => {
+            //     break;
+            // }
+            // None => {
+            //     break;
+            // }
+            _ => break
+            // _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
         }
     }
     args

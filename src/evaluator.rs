@@ -5,7 +5,7 @@ use std::io::Write;
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    String(String),
+    _String(String),
     Number(f32),
 }
 impl Value {
@@ -17,27 +17,68 @@ impl Value {
     }
 }
 
-pub fn eval(
+pub enum LogoErr {
+    Stop,
+}
+
+pub fn eval_all(
+    ast: VecDeque<Command>,
+    functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
+    variables: &HashMap<String, Value>,
+    image: &mut Image,
+) -> Result<(), LogoErr> {
+    for cmd in ast {
+        // println!(" Parsed to:\n{:?}", cmd);
+        match eval(cmd, functions, variables, image) {
+            Err(e)  => {return Err(e);},
+            Ok(()) => {}
+        };
+    }
+    Ok(())
+}
+
+fn eval(
     cmd: Command,
     functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
     variables: &HashMap<String, Value>,
     image: &mut Image,
-) {
+) -> Result<(), LogoErr> {
     match cmd {
-        Command::Forward(expr) => image.forward(eval_expr(expr, variables).get_number()),
-        Command::Backward(expr) => image.backward(eval_expr(expr, variables).get_number()),
-        Command::Right(expr) => image.right(eval_expr(expr, variables).get_number()),
-        Command::Left(expr) => image.left(eval_expr(expr, variables).get_number()),
-        Command::Show(expr) => println!("{:?}", eval_expr(expr, variables)),
-        Command::Repeat(iters, body) => eval_loop(eval_expr(iters, variables).get_number(), body,functions, variables, image),
-        Command::If(pred,ifcommands ) => eval_ifelse(eval_expr(pred, variables).get_number(), ifcommands, VecDeque::new(), functions, variables, image),
-        Command::IfElse(pred,ifcommands , elsecommands) => eval_ifelse(eval_expr(pred, variables).get_number(), ifcommands, elsecommands, functions, variables, image),
-        Command::FunctionCall(name, args) => call_function(name, args, functions,variables, image),
+        Command::Forward(expr) => {image.forward(eval_expr(expr, variables).get_number());Ok(())},
+        Command::Backward(expr) => {image.backward(eval_expr(expr, variables).get_number());Ok(())},
+        Command::Right(expr) => {image.right(eval_expr(expr, variables).get_number());Ok(())},
+        Command::Left(expr) => {image.left(eval_expr(expr, variables).get_number());Ok(())},
+        Command::Show(expr) => {println!("{:?}", eval_expr(expr, variables));Ok(())},
+        Command::Repeat(iters, body) => eval_loop(
+            eval_expr(iters, variables).get_number(),
+            body,
+            functions,
+            variables,
+            image,
+        ),
+        Command::If(pred, ifcommands) => eval_ifelse(
+            eval_expr(pred, variables).get_number(),
+            ifcommands,
+            VecDeque::new(),
+            functions,
+            variables,
+            image,
+        ),
+        Command::IfElse(pred, ifcommands, elsecommands) => eval_ifelse(
+            eval_expr(pred, variables).get_number(),
+            ifcommands,
+            elsecommands,
+            functions,
+            variables,
+            image,
+        ),
+        Command::FunctionCall(name, args) => call_function(name, args, functions, variables, image),
         Command::FunctionDeclaration(name, args, cmds) => {
             functions.insert(name, (args, cmds));
+            Ok(())
         }
-        Command::Clearscreen => image.clear(),
-        _ => unreachable!(),
+        Command::Clearscreen => {image.clear(); Ok(())},
+        Command::Stop => Err(LogoErr::Stop),
     }
 }
 
@@ -48,17 +89,12 @@ fn eval_ifelse(
     functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
     variables: &HashMap<String, Value>,
     image: &mut Image,
-) {
+) -> Result<(), LogoErr> {
     let n = pred != 0.0;
     if n {
-        for cmd in &ifcommands {
-            eval(cmd.clone(), functions, variables, image);
-        }
-    }
-    else {
-        for cmd in &elsecommands {
-            eval(cmd.clone(), functions, variables, image);
-        }
+        eval_all(ifcommands, functions, variables, image)
+    } else {
+        eval_all(elsecommands, functions, variables, image)
     }
 }
 
@@ -68,7 +104,7 @@ fn call_function(
     functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
     variables: &HashMap<String, Value>,
     image: &mut Image,
-) {
+) -> Result<(), LogoErr>{
     if let Some((arg_names, func_body)) = functions.get(&name) {
         let func_body = func_body.clone();
         if arg_names.len() != arg_values.len() {
@@ -80,9 +116,8 @@ fn call_function(
             .map(|(arg, val)| (arg.clone(), eval_expr(val, variables)))
             .collect::<HashMap<String, Value>>();
 
-        for cmd in func_body {
-            eval(cmd.clone(), functions, &local_vars, image);
-        }
+        _ = eval_all(func_body, functions, &local_vars, image);
+        Ok(())
     } else {
         panic!("Undefined function: {}", name);
     }
@@ -94,19 +129,17 @@ fn eval_loop(
     functions: &mut HashMap<String, (Vec<String>, VecDeque<Command>)>,
     variables: &HashMap<String, Value>,
     image: &mut Image,
-) {
+) -> Result<(), LogoErr> {
     let n = iters as i32;
     for _i in 0..(n as i32) {
-        for cmd in &commands {
-            eval(cmd.clone(), functions, variables, image);
-        }
+        if let Err(e) = eval_all(commands.clone(), functions, variables, image) {
+            return Err(e);
+        };
     }
+    Ok(())
 }
 
-fn eval_expr(
-    expr: Expr,
-    variables: &HashMap<String, Value>
-) -> Value {
+fn eval_expr(expr: Expr, variables: &HashMap<String, Value>) -> Value {
     match expr {
         Expr::Number(n) => Value::Number(n),
         Expr::Add(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
@@ -127,18 +160,25 @@ fn eval_expr(
             _ => panic!("sub: wrong types"),
         },
         Expr::Div(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
-            (Value::Number(n1), Value::Number(n2)) => if n2 == 0.0 {panic!("Attempt to divide by 0")} else {Value::Number(n1 / n2)},
+            (Value::Number(n1), Value::Number(n2)) => {
+                if n2 == 0.0 {
+                    panic!("Attempt to divide by 0")
+                } else {
+                    Value::Number(n1 / n2)
+                }
+            }
             _ => panic!("div: wrong types"),
         },
         Expr::Minus(e) => match eval_expr(*e, variables) {
             Value::Number(n) => Value::Number(-n),
             _ => panic!("add: wrong types"),
         },
-        Expr::Lt(e1,e2 ) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
-            (Value::Number(n1), Value::Number(n2)) => Value::Number(if n1 < n2 {1.0} else {0.0}),
+        Expr::Lt(e1, e2) => match (eval_expr(*e1, variables), eval_expr(*e2, variables)) {
+            (Value::Number(n1), Value::Number(n2)) => {
+                Value::Number(if n1 < n2 { 1.0 } else { 0.0 })
+            }
             _ => panic!("(<): wrong types"),
         },
-        _ => unimplemented!()
     }
 }
 
@@ -147,7 +187,8 @@ pub struct Image {
     y: f32,
     angle: f32,
     svg: String,
-    width: f32, height: f32,
+    width: f32,
+    height: f32,
     pen_width: f32,
     pen_color: String,
 }
@@ -156,16 +197,16 @@ impl Image {
         Image {
             x: w / 2.0,
             y: h / 2.0,
-            angle: 0.0,
+            angle: -90.0,
             width: w,
             height: h,
             pen_color: "red".to_string(),
-            pen_width: 2.0,
+            pen_width: 1.0,
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
     }
 
-    fn clear(&mut self){
+    fn clear(&mut self) {
         self.svg = format!("<svg width=\"{}\" height=\"{}\">", self.width, self.height).to_string()
     }
 
@@ -187,18 +228,23 @@ impl Image {
         self.add_line_to_svg(self.x, self.y, new_x, new_y);
         self.x = new_x;
         self.y = new_y;
+        // println!("image-forward {}, {}", self.x, self.y);
     }
 
     fn backward(&mut self, dist: f32) {
         self.forward(-dist);
+        // println!("image-backward {}, {}", self.x, self.y);
     }
 
     fn right(&mut self, angle: f32) {
-        self.angle -= angle;
-    }
-
-    fn left(&mut self, angle: f32) {
         self.angle += angle;
+        // println!("image-right {}", self.angle);
+
+    }
+    
+    fn left(&mut self, angle: f32) {
+        self.angle -= angle;
+        // println!("image-left {}", self.angle);
     }
     pub fn save_svg(&mut self, filename: &str) {
         self.svg.push_str("</svg>");
