@@ -29,10 +29,26 @@ pub enum Token {
     If,
     #[token("ifelse")]
     IfElse,
+    #[regex(r"to|TO")]
+    To,
+    #[regex(r"end|END")]
+    End,
     #[token("show")]
     Show,
     #[token("clearscreen")]
     Clearscreen,
+    #[token("setcolor")]
+    Setcolor,
+    #[token("pick")]
+    Pick, // pick [list] - take random elem from the list
+    // colors red orange yellow green blue violet
+    #[token("red")] Red,
+    #[token("orange")]Orange,
+    #[token("yellow")]Yellow,
+    #[token("green")]Green,
+    #[token("blue")]Blue,
+    #[token("violet")]Violet,
+    #[token("black")]Black,
     #[regex(r"fd|forward")]
     Forward,
     #[regex(r"bk|back|backward")]
@@ -41,10 +57,6 @@ pub enum Token {
     Left,
     #[regex(r"rt|right")]
     Right,
-    #[regex(r"to|TO")]
-    To,
-    #[regex(r"end|END")]
-    End,
     #[regex(r"[0-9]+(?:\.[0-9]+)?", |lex| lex.slice().parse::<f32>().ok())]
     Number(Option<f32>),
     #[regex(r":[a-z]+", |lex| lex.slice().to_string())]

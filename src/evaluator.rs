@@ -79,6 +79,14 @@ fn eval(
         }
         Command::Clearscreen => {image.clear(); Ok(())},
         Command::Stop => Err(LogoErr::Stop),
+        Command::Setcolor(cmd) => {
+            match *cmd{
+            Command::Color(c) => image.setcolor(c),
+            _=> unimplemented!("setcolor: unimplemented")
+            }
+            Ok(())
+        },
+        _ => panic!("invalid command")
     }
 }
 
@@ -200,7 +208,7 @@ impl Image {
             angle: -90.0,
             width: w,
             height: h,
-            pen_color: "red".to_string(),
+            pen_color: "black".to_string(),
             pen_width: 1.0,
             svg: format!("<svg width=\"{}\" height=\"{}\">", w, h).to_string(),
         }
@@ -208,6 +216,10 @@ impl Image {
 
     fn clear(&mut self) {
         self.svg = format!("<svg width=\"{}\" height=\"{}\">", self.width, self.height).to_string()
+    }
+
+    fn setcolor(&mut self, color: String){
+        self.pen_color=color;
     }
 
     fn calculate_new_position(&self, dist: f32) -> (f32, f32) {
