@@ -1,5 +1,22 @@
 # Logo interpreter written in rust
 
+## Usage
+
+```bash
+# build
+cargo build -r
+
+# use in interactive mode
+./target/release/logo
+
+# input from file
+./target/release/logo -i samples/fern.lgo
+
+# image is by default saved in output.svg at the end of each session
+# to save in a defferent file use -o option
+./target/release/logo -i samples/fern.lgo -o fern.svg
+```
+
 ## Supported commands
 
 ### Turtle

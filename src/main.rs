@@ -23,14 +23,6 @@ fn get_matches() -> clap::ArgMatches<'static> {
                 .short("o")
                 .long("output")
                 .value_name("FILE")
-                .help("Redirect stdout")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("graphics")
-                .short("g")
-                .long("graphics")
-                .value_name("FILE")
                 .help("Save image to file, default = result.svg")
                 .takes_value(true),
         )
@@ -85,8 +77,8 @@ fn main() {
             _ = evaluator::eval_all(ast, &mut functions, &HashMap::new(), &mut image);
         }
     }
-    if let Some(output_file) = matches.value_of("graphisc") {
-        image.save_svg(&format!("{}.svg", output_file)[..]);
+    if let Some(output_file) = matches.value_of("output") {
+        image.save_svg(&format!("{}", output_file)[..]);
     } else {
         image.save_svg("output.svg");
     }
