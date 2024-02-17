@@ -50,14 +50,14 @@ fn main() {
         }
         
         let mut tokens: VecDeque<lexer::Token> = lexer::process(prog.as_str());
-        println!("Tokenized to:\n{:?}\n**********************************************************", tokens);
+        // println!("Tokenized to:\n{:?}\n**********************************************************", tokens);
         
         let ast: VecDeque<parser::Command> = parser::parse(&mut tokens);
-        println!("Parsed to:");
-        for cmd in ast.clone(){
-            println!("{:?}", cmd);
-        }
-        println!("**********************************************************");
+        // println!("Parsed to:");
+        // for cmd in ast.clone(){
+        //     println!("{:?}", cmd);
+        // }
+        // println!("**********************************************************");
         _ = evaluator::eval_all(ast, &mut functions, &HashMap::new(), &mut image);
 
         

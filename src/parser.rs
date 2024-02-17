@@ -64,7 +64,7 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
                 let body = parse_block_brackets(tokens);
                 commands.push_back(Command::Repeat(iters, body));
             }
-            
+
             Token::To => {
                 let name = parse_name(tokens);
                 let args = parse_args(tokens);
@@ -118,17 +118,18 @@ pub fn parse(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
     commands
 }
 
-
 fn parse_expr_seq(tokens: &mut VecDeque<Token>) -> Vec<Expr> {
     let mut args: Vec<Expr> = vec![];
     loop {
         match tokens.front() {
-            Some(Token::Number(Some(_))) | Some(Token::Variable(_)) | Some(Token::LParen) | Some(Token::Random)=> {
+            Some(Token::Number(Some(_)))
+            | Some(Token::Variable(_))
+            | Some(Token::LParen)
+            | Some(Token::Random) => {
                 let expr = parse_expr(tokens);
                 args.push(expr);
             }
-            _ => break
-            // _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
+            _ => break, // _ => panic!("Parse expr seq: unexpected token {:?}", tokens.front()),
         }
     }
     args
@@ -153,15 +154,12 @@ fn parse_args(tokens: &mut VecDeque<Token>) -> Vec<String> {
     }
     args
 }
+
 fn parse_name(tokens: &mut VecDeque<Token>) -> String {
     match tokens.pop_front() {
         Some(Token::Function(name)) => name,
         _ => panic!("Expected function name after TO"),
     }
-}
-
-fn _parse_block(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
-    parse(tokens)
 }
 
 fn parse_block_end(tokens: &mut VecDeque<Token>) -> VecDeque<Command> {
@@ -238,8 +236,6 @@ mod tests {
 
         assert_eq!(ast, expected);
     }
-
-    
 
     #[test]
     fn test_parser_2() {
@@ -467,37 +463,40 @@ mod tests {
     }
 
     #[test]
-fn test_parser_if_statement() {
-    use Command::{If, Show};
-    use Expr::{*};
+    fn test_parser_if_statement() {
+        use Command::{If, Show};
+        use Expr::*;
 
-    // Test case with if statement
-    let input = "if 4 [show 9]";
-    let mut tokens = process(input);
-    let ast = parse(&mut tokens);
+        // Test case with if statement
+        let input = "if 4 [show 9]";
+        let mut tokens = process(input);
+        let ast = parse(&mut tokens);
 
-    let expected = vec_to_vecdeque(vec![If(Number(4.0), vec_to_vecdeque(vec![Show(Number(9.0))]))]);
-    
-    assert_eq!(ast, expected);
-}
+        let expected = vec_to_vecdeque(vec![If(
+            Number(4.0),
+            vec_to_vecdeque(vec![Show(Number(9.0))]),
+        )]);
 
-#[test]
-fn test_parser_ifelse_statement() {
-    use Command::{IfElse, Show};
-    use Expr::{*};
-    // Test case with ifelse statement
-    let input = "ifelse 3-3 [show 12] [show 2137]";
-    let mut tokens = process(input);
-    let ast = parse(&mut tokens);
+        assert_eq!(ast, expected);
+    }
 
-    let expected = vec_to_vecdeque(vec![IfElse(Sub(Box::new(Number(3.0)), Box::new(Number(3.0))), 
-        vec_to_vecdeque(vec![Show(Number(12.0))]), 
-        vec_to_vecdeque(vec![Show(Number(2137.0))]))]);
-    
-    assert_eq!(ast, expected);
-}
+    #[test]
+    fn test_parser_ifelse_statement() {
+        use Command::{IfElse, Show};
+        use Expr::*;
+        // Test case with ifelse statement
+        let input = "ifelse 3-3 [show 12] [show 2137]";
+        let mut tokens = process(input);
+        let ast = parse(&mut tokens);
 
+        let expected = vec_to_vecdeque(vec![IfElse(
+            Sub(Box::new(Number(3.0)), Box::new(Number(3.0))),
+            vec_to_vecdeque(vec![Show(Number(12.0))]),
+            vec_to_vecdeque(vec![Show(Number(2137.0))]),
+        )]);
 
+        assert_eq!(ast, expected);
+    }
 }
 
 /*

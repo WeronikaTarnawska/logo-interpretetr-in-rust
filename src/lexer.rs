@@ -42,9 +42,9 @@ pub enum Token {
     Wait,
     #[token("pick")]
     Pick, // pick [list] - take random elem from the list
-    /* colors: red orange yellow green blue violet */
     #[token("random")]
     Random,
+    /* colors: red orange yellow green blue violet */
     #[token("red")]
     Red,
     #[token("orange")]
@@ -101,16 +101,4 @@ pub fn process(input: &str) -> VecDeque<Token> {
         })
         .collect::<VecDeque<Token>>();
     processed
-}
-
-pub fn _process_line(source: &str) {
-    let tokens = process(source);
-    tokens.iter().for_each(|token| match token {
-        Token::Forward => println!("Forward"),
-        Token::Number(Some(n)) => println!("Number {}", n),
-        Token::Add => println!("Add"),
-        Token::Mul => println!("Mul"),
-        Token::Right => println!("Right"),
-        _ => eprintln!("Unknown command / Unimplemented"),
-    });
 }
