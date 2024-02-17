@@ -14,11 +14,11 @@ fn parse_eq(tokens: &mut VecDeque<Token>) -> Box<Expr> {
                 let right_operand = parse_addition(tokens);
                 left_operand = Box::new(Expr::Lt(left_operand, right_operand));
             }
-            // Some(&Token::Leq) => {
-            //     tokens.pop_front();
-            //     let right_operand = parse_addition(tokens);
-            //     left_operand = Box::new(Expr::Leq(left_operand, right_operand));
-            // }
+            Some(&Token::Eq) => {
+                tokens.pop_front();
+                let right_operand = parse_addition(tokens);
+                left_operand = Box::new(Expr::Eq(left_operand, right_operand));
+            }
             _ => break,
         }
     }
@@ -122,6 +122,7 @@ fn parse_list(tokens: &mut VecDeque<Token>) -> VecDeque<Expr> {
                 | Token::Mul
                 | Token::Div
                 | Token::Add
+                | Token::Eq
                 | Token::Lt => {
                     let expr = parse(tokens);
                     exprs.push_back(*expr);

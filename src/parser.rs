@@ -13,6 +13,7 @@ pub enum Expr {
     Div(Box<Expr>, Box<Expr>),
     Sub(Box<Expr>, Box<Expr>),
     Lt(Box<Expr>, Box<Expr>),
+    Eq(Box<Expr>, Box<Expr>),
     Rand(Box<Expr>),
     Color(String),
     Pick(VecDeque<Expr>),
